@@ -7,7 +7,7 @@
 // @lc code=start
 class Solution {
 public:
-    int getKthElement(const vector<int>& nums1, const vector<int>& nums2, int k) {
+    int getKthElement(const vector<int>& nums1, const vector<int>& nums2, int k ) {
         int m = nums1.size(), n = nums2.size();
         int index1 = 0, index2 = 0;
         while (true) {
