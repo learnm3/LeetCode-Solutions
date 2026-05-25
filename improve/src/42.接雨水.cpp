@@ -3,7 +3,6 @@
  *
  * [42] 接雨水
  */
-
 // @lc code=start
 class Solution {
 public:
