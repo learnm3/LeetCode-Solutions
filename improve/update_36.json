@@ -1,0 +1,7 @@
+{
+  "题目描述": "你是RTS/城市建造类游戏的建筑放置验证系统开发者。地图是一个9×9的网格（相当于数独的9×9棋盘）。\n在RTS游戏中，需要验证新建筑的放置不违反区域约束：同一行、同一列、同一3×3子区域内不能出现两个同类建筑（如同一子区域的两个兵营）。\n给定当前地图上的建筑布局（部分格子有建筑，部分为空），验证当前布局是否合法。",
+  "解题思路": "1. 三组哈希集合：row[9][10], col[9][10], box[9][10]\n2. 遍历棋盘，遇到非空格：\n   - 检查row[i][num]是否为true → 冲突\n   - 检查col[j][num] → 冲突\n   - 检查box[boxIndex][num] → 冲突\n   - 无冲突则全部标为true\n3. boxIndex = (i/3)*3 + (j/3)\n4. 注意只验证已放置的建筑，不判断是否有解",
+  "代码模板": "bool isValidSudoku(vector<vector<char>>& board) {\n    bool row[9][10] = {}, col[9][10] = {}, box[9][10] = {};\n    for (int i = 0; i < 9; i++) {\n        for (int j = 0; j < 9; j++) {\n            if (board[i][j] == '.') continue;\n            int num = board[i][j] - '0';\n            int bi = i / 3 * 3 + j / 3;\n            if (row[i][num] || col[j][num] || box[bi][num])\n                return false;\n            row[i][num] = col[j][num] = box[bi][num] = true;\n        }\n    }\n    return true;\n}\n// 三组哈希表| box索引=(i/3)*3+(j/3) | 空格跳过",
+  "算法思维框架": "触发条件：网格 + 行/列/子区域唯一性约束 → 多维度哈希表\n关键公式：boxIndex = (i/3)*3 + j/3（将3×3子网格映射到0-8）\n复杂度：O(1)（固定9×9）\n游戏应用：建筑放置、技能范围判定、地图区域约束",
+  "相似题目": "#37 解数独(填充版) | #733 图像渲染(网格遍历)"
+}

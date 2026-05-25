@@ -1,0 +1,7 @@
+{
+  "题目描述": "你是渲染管线中的粒子系统开发者。GPU渲染的数千个粒子按屏幕空间坐标排序后存储。在将粒子提交给Draw Call之前，需要移除坐标重复的粒子——同一像素位置的多余粒子不会产生可见变化，但会浪费GPU资源。\n给定已排序的坐标数组，原地去重，返回不重复的坐标数量。",
+  "解题思路": "1. 双指针（快慢指针）：\n   - slow指向\"下一个不重复元素应放置的位置\"\n   - fast扫描数组\n   - 当nums[fast]≠nums[fast-1]时，nums[slow++]=nums[fast]\n2. 因为是排序数组，重复元素必相邻\n3. 关键：slow从1开始（第一个元素一定保留），fast从1开始\n4. 最终slow的值就是去重后的长度",
+  "代码模板": "int removeDuplicates(vector<int>& nums) {\n    if (nums.empty()) return 0;\n    int slow = 1; // 第一个元素一定保留\n    for (int fast = 1; fast < nums.size(); fast++) {\n        if (nums[fast] != nums[fast - 1]) {\n            nums[slow++] = nums[fast];\n        }\n    }\n    return slow; // slow就是新长度\n}\n// 快慢指针经典模板 | slow从1开始 | slow返回新数组长度",
+  "算法思维框架": "触发条件：有序数组 + 原地修改 + 去重/移除 → 快慢指针\n模板：slow=起始位置, fast=起始位置; while(fast<n)\n易错：\n- ❌ slow初始化为0（第一个元素也被覆盖）\n- ❌ 比较nums[fast]和nums[slow]而非nums[fast-1]\n- ❌ 返回值应该是slow（新长度）而非slow+1",
+  "相似题目": "#27 移除元素(同模板) | #80 删除有序数组重复项II(变体: 最多保留2个)"
+}

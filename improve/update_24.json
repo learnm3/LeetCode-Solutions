@@ -1,0 +1,7 @@
+{
+  "题目描述": "你是双持武器技能槽系统的开发者。动作栏的相邻两个技能槽（主手/副手）支持一键交换位置。\n技能槽以链表结构存储，实现每两个相邻节点交换位置的功能。\n如 1→2→3→4 交换后为 2→1→4→3。不能只改值，必须改节点连接。",
+  "解题思路": "1. 递归思路：交换前两个节点，剩余递归处理\n   - head指向第二个节点，head->next指向第一个节点，第一个节点的next指向递归(第三个节点开始)\n2. 迭代思路：用prev指针记录上一组的尾节点\n   - 交换prev->next和prev->next->next\n   - prev跳到下一组的前一个\n3. 递归更简洁，迭代空间更优",
+  "代码模板": "// 递归版（简洁）\nListNode* swapPairs(ListNode* head) {\n    if (!head || !head->next) return head;\n    ListNode* newHead = head->next;\n    head->next = swapPairs(newHead->next);\n    newHead->next = head;\n    return newHead;\n}\n// 迭代版（空间O(1)）\nListNode* swapPairs(ListNode* head) {\n    ListNode dummy(0); dummy.next = head;\n    ListNode* prev = &dummy;\n    while (prev->next && prev->next->next) {\n        ListNode* a = prev->next;\n        ListNode* b = a->next;\n        a->next = b->next;\n        b->next = a;\n        prev->next = b;\n        prev = a;\n    }\n    return dummy.next;\n}\n// 递归：三行搞定 | 迭代：prev+dummy+a+b四指针",
+  "算法思维框架": "触发条件：链表节点两两交换/翻转 → 递归或迭代+prev指针\n#25是此题的通用化版本（K个一组翻转）\n递归适合K=2的简单情况；K个一组必须迭代\n易错：\n- ❌ 交换后忘记重新连接前后组之间的链接\n- ❌ prev没有及时更新（停在原地而非跳两个位置）",
+  "相似题目": "#25 K个一组翻转链表 | #206 反转链表(基础操作)"
+}

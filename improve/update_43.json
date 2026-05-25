@@ -1,0 +1,7 @@
+{
+  "题目描述": "你是MMO经济系统的开发者。拍卖行中两笔大额货币（超过64位整数范围）需要进行乘法运算（如：黄金数量 × 汇率 = 手续费）。\n由于数值超大，不能直接用整数乘法。需要实现字符串级别的乘法运算。\n给定两个非负整数字符串 num1 和 num2，返回它们的乘积字符串。",
+  "解题思路": "1. 模拟手工竖式乘法：\n   - 结果的位数最多为 m+n\n   - pos[i+j] 和 pos[i+j+1] 存储当前乘积位\n   - num1[i] * num2[j] 的结果加到 pos[i+j+1]（低位）\n   - 逐位进位处理\n2. 为什么不能简单转整数：num1或num2可长达110位\n3. 优化：用int数组而非string拼接（减少字符串操作开销）\n4. 边界处理：乘积为0时返回\"0\"而非空串",
+  "代码模板": "string multiply(string num1, string num2) {\n    if (num1 == \"0\" || num2 == \"0\") return \"0\";\n    int m = num1.size(), n = num2.size();\n    vector<int> pos(m + n, 0);\n    for (int i = m - 1; i >= 0; i--) {\n        for (int j = n - 1; j >= 0; j--) {\n            int mul = (num1[i] - '0') * (num2[j] - '0');\n            int p1 = i + j, p2 = i + j + 1;\n            int sum = mul + pos[p2];\n            pos[p2] = sum % 10;\n            pos[p1] += sum / 10;\n        }\n    }\n    string ans;\n    for (int d : pos) {\n        if (!(ans.empty() && d == 0)) ans += char(d + '0');\n    }\n    return ans;\n}\n// 竖式乘法入位 | pos[p1]存进位 pos[p2]存本位 | 跳过前导零",
+  "算法思维框架": "触发条件：超大数运算（超过int64范围） → 字符串模拟竖式计算\n类似题目：#415 字符串相加 #67 二进制求和\n游戏应用：MMO经济系统、天文学数值计算、科学模拟\n复杂度：O(mn)时间 O(m+n)空间",
+  "相似题目": "#415 字符串相加 | #67 二进制求和 | #2 两数相加(链表版大数加法)"
+}

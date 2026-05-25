@@ -1,0 +1,7 @@
+{
+  "题目描述": "你是背包系统的开发者。玩家的背包按稀有度排序存储物品。当获得新物品时，需要找到它在背包中的正确插入位置以维持排序顺序。\n给定排序后的稀有度数组和目标稀有度值target，返回target应插入的索引（如果target已存在，插入到该位置前面，即第一个≥target的位置）。\n其实就是实现二分查找的左边界版。",
+  "解题思路": "1. 标准二分查找左边界：\n   - while(l<r)\n   - mid = l + (r-l)/2\n   - nums[mid] < target → l=mid+1\n   - nums[mid] >= target → r=mid\n   - 返回 l\n2. 如果target大于所有元素，l会停在nums.size()\n3. 本质就是lower_bound()\n4. 这是最简单但最重要的二分模板",
+  "代码模板": "int searchInsert(vector<int>& nums, int target) {\n    int l = 0, r = nums.size();\n    while (l < r) {\n        int mid = l + (r - l) / 2;\n        if (nums[mid] < target) l = mid + 1;\n        else r = mid;\n    }\n    return l;\n}\n// 万能二分模板：找第一个≥target | r初始化为n(应对插入末尾) | while(l<r)",
+  "算法思维框架": "这是最通用的二分模板——找\"第一个满足条件的位置\"\n模板参数化：\n- 找第一个≥target：if(nums[mid]<target)l=mid+1 else r=mid\n- 找第一个>target：if(nums[mid]<=target)l=mid+1 else r=mid\n复杂度：O(log n) O(1)\n所有二分变体都可以从这个模板推导出来",
+  "相似题目": "#34 查找元素范围(左右边界) | #704 二分查找"
+}

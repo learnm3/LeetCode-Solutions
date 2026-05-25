@@ -1,0 +1,7 @@
+{
+  "题目描述": "你是RPG对话树编辑器的开发者。对话树由NPC提问和玩家回应交替组成。NPC提问用'('表示一个分支开始，玩家回应用')'表示该分支结束。\n给定分支数n，生成所有可能的合法对话树结构——要求每个分支都有头有尾，不存在悬空未关闭的提问。\n例如n=3 → [\"((()))\",\"(()())\",\"(())()\",\"()(())\",\"()()()\"]",
+  "解题思路": "1. 回溯+约束剪枝：\n   - 维护open(已使用的'('数)和close(已使用的')'数)\n   - open < n 时可添加 '('\n   - close < open 时可添加 ')'（保证不会出现')'比'('多的情况）\n   - open==close==n 时收集结果\n2. 与#20的区别：#20是验证，#22是生成所有合法的\n3. 本质是Catalan数——第n个Catalan数种合法结构\n4. 复杂度O(4ⁿ/√n)——Catalan数的渐近界",
+  "代码模板": "void backtrack(int n, int open, int close, string& path, vector<string>& ans) {\n    if (open == n && close == n) {\n        ans.push_back(path);\n        return;\n    }\n    if (open < n) {\n        path.push_back('(');\n        backtrack(n, open + 1, close, path, ans);\n        path.pop_back(); // 撤销\n    }\n    if (close < open) {\n        path.push_back(')');\n        backtrack(n, open, close + 1, path, ans);\n        path.pop_back(); // 撤销\n    }\n}\n// 两个if条件不是互斥的 | open<n时还可加'(' | close<open时还可加')'",
+  "算法思维框架": "触发条件：生成所有合法组合/结构 + 有约束条件 → 回溯+剪枝\n和标准回溯的区别：不是`for choices`而是两个独立的条件判断\n剪枝条件：close<open 保证不会出现非法前缀\nCategory数是Catalan数 C(2n,n)/(n+1)",
+  "相似题目": "#20 有效的括号(验证) | #17 电话号码组合(独立选项回溯) | #39 组合总和"
+}
