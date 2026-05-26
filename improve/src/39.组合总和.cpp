@@ -2,29 +2,113 @@
  * @lc app=leetcode.cn id=39 lang=cpp
  *
  * [39] 组合总和
+ *
+ * ============================================================
+ * 游戏客户端开发面试情境题
+ * ============================================================
+ *
+ * 【情境】
+ * 你正在做商店系统的"凑单推荐"功能。
+ * 玩家有 N 种可购买的商品（每个可以买多次），每种有固定
+ * 价格。策划要求：推荐所有恰好花光玩家金币（Target）的
+ * 购买组合方案。这就是经典的"无限背包 + 枚举所有解"问题
+ * ——组合总和。
+ *
+ * 游戏开发中同样的场景：
+ * - 商店凑单推荐：花光所有钻石的组合方案
+ * - 技能点分配：总点数固定，哪些技能组合能刚好花光
+ * - 配方合成：多种原料按比例合成，找所有可能的配方组合
+ * - 成就点数兑换：总积分换道具，枚举所有兑换方案
+ * - 材料本掉落规划：体力刚好用完的副本组合
+ * - BUFF 商店：有限金币买 BUFF，枚举所有满额方案
+ *
+ * ============================================================
+ * 题目
+ * ============================================================
+ *
+ * 给一个无重复元素的正整数数组 candidates 和目标值 target，
+ * 找出所有和为 target 的组合。candidates 中的数字可以无限
+ * 次重复使用。
+ *
+ * 示例：
+ *   输入: candidates = [2,3,6,7], target = 7
+ *   输出: [[2,2,3], [7]]
+ *
+ * ============================================================
+ * 核心思维：回溯 + "不回头"去重 + start 参数
+ * ============================================================
+ *
+ * 如果暴力枚举每个位置选或不选，会有重复：
+ *   [2,2,3] 和 [3,2,2] 和 [2,3,2] 是同一组合，
+ *   但不同顺序会被枚举出来。
+ *
+ * 怎么去重？—— "只能往后选，不能回头"。
+ *   用一个 start 参数，表示"本轮只能从 candidates[start]
+ *   开始选"。这样保证了组合是按索引顺序的，天然去重。
+ *
+ * 决策树（candidates=[2,3,6,7]，target=7）：
+ *
+ *                        [] sum=0
+ *          /    /      |      \
+ *       [2]   [3]    [6]     [7]
+ *       /|\    |\     |       ✓(found)
+ *     [2,2] [2,3] [3,6]...
+ *     /  \
+ *  [2,2,2] [2,2,3] ✓
+ *   (sum=6, 再+2=8>7, 剪枝)
+ *
+ * 注意：每个节点只能选 >= 当前索引的元素。
+ *   - 从 i=0(2) 开始，可以选 2,3,6,7
+ *   - 如果选了 2，下一层 start 仍是 0（允许重复选 2！）
+ *   - 如果选了 3，下一层 start=1（只能选 3,6,7）
+ *
+ * 剪枝：如果 sum + candidates[i] > target，直接跳过
+ *   （因为数组正序且无重复，后面的数字更大，更不可能选）
+ *
+ * ============================================================
+ * 与组合总和 II（40 题）的区别
+ * ============================================================
+ *
+ *   39: 同一数字可无限次使用 → 递归传 start=i（允许重复选）
+ *   40: 每个数字只能用一次 → 递归传 start=i+1（不能重复选）
+ *       + 数组有重复元素，需要同层去重
+ *
+ * ============================================================
+ * 代码分步讲解
+ * ============================================================
  */
+
+#include <vector>
+#include <functional>
+using namespace std;
 
 // @lc code=start
 class Solution {
 public:
     vector<vector<int>> combinationSum(vector<int>& candidates, int target) {
         vector<vector<int>> result;
-        vector<int> combination;
-        std::function<void(int, int)> backtrack = [&](int start, int sum) {
+        vector<int> path;
+
+        // lambda 回溯，start 保证不回头、可重复选
+        function<void(int, int)> dfs = [&](int start, int sum) {
+            // ---- ① 找到合法组合 ----
             if (sum == target) {
-                result.push_back(combination);
+                result.push_back(path);
                 return;
             }
-            for (size_t i = start; i < candidates.size(); ++i) {
-                if (sum + candidates[i] > target) continue;
-                combination.push_back(candidates[i]);
-                backtrack(i, sum + candidates[i]);
-                combination.pop_back();
+
+            // ---- ② 从 start 开始选（允许重复选自身） ----
+            for (int i = start; i < candidates.size(); ++i) {
+                if (sum + candidates[i] > target) continue;  // 剪枝
+
+                path.push_back(candidates[i]);
+                dfs(i, sum + candidates[i]);   // 传 i（不是 i+1）→ 允许重复选
+                path.pop_back();               // 回溯
             }
         };
-        backtrack(0, 0);
+
+        dfs(0, 0);
         return result;
     }
 };
 // @lc code=end
-

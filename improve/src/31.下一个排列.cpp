@@ -2,7 +2,78 @@
  * @lc app=leetcode.cn id=31 lang=cpp
  *
  * [31] 下一个排列
+ *
+ * ===== 游戏客户端开发面试情境题 =====
+ *
+ * 【情境】你在开发一个卡牌游戏的"技能组合排序器"。
+ * 玩家手中有 N 张技能牌，每张牌有唯一的编号（1 到 N）。
+ * 系统需要按"字典序"逐个生成所有可能的技能释放顺序，
+ * 每次调用"下一个排列"就能得到下一组释放顺序。
+ * 例如当前顺序是 [1,2,3]，下一个是 [1,3,2]，再下一个是 [2,1,3]...
+ * 这就是"下一个排列"问题。
+ *
+ * 另一个情境：策略游戏的"科技树遍历"——当前解锁的科技配置是一个排列，
+ * 点击"下一套方案"自动生成字典序的下一个组合。
+ *
+ * 【题目】将给定数组重新排列成字典序中下一个更大的排列。
+ * 如果不存在下一个更大的排列（数组已是最大排列/降序），
+ * 则重排为最小排列（升序）。
+ * 必须原地修改，只能使用常数额外空间。
+ * 示例：
+ *   输入：nums = [1,2,3] → 输出：[1,3,2]
+ *   输入：nums = [3,2,1] → 输出：[1,2,3]
+ *   输入：nums = [1,1,5] → 输出：[1,5,1]
+ *
+ * ===== 核心思维 =====
+ *
+ * 算法四步（务必记住，面试高频）：
+ *
+ * 用数字排列理解：
+ *   当前：1 2 4 6 5 3
+ *   目标：1 2 5 3 4 6
+ *
+ * 第一步：从右向左找第一个"下降"的位置
+ *   nums = 1  2  4  6  5  3
+ *                ↑ (k=2, 因为 4<6 是上升，直到 6>5 才下降)
+ *   实际上要找第一个 nums[k] < nums[k+1] 的位置：
+ *   从右看：3<5? 5<6? 6<4? 不，6>4，所以 k=2（值 4）
+ *
+ * 第二步：从右向左找第一个大于 nums[k] 的数
+ *   在 [6,5,3] 中从右找第一个 > 4 的：3<4? 5>4! 所以 l=4（值 5）
+ *
+ * 第三步：交换 nums[k] 和 nums[l]
+ *   交换 4 和 5：1 2 5 6 4 3
+ *
+ * 第四步：反转 k+1 到末尾
+ *   反转 [6,4,3]：[3,4,6]
+ *   结果：1 2 5 3 4 6
+ *
+ * 为什么这样做？
+ *   - 要找到"尽量小"的下一个排列 → 从右找第一个可以增大的位置（尽量靠右）
+ *   - 增大后，右边需要最小化 → 反转（因为右边原本是降序，反转后变成升序）
+ *
+ * 形象类比：
+ *   想象字典中的单词排序。要从当前单词得到下一个单词：
+ *   1. 从末尾往前找第一个可以变大的字母（该字母后面有比它大的字母）
+ *   2. 用"刚好比它大"的字母替换它
+ *   3. 后面的字母按最小顺序排列（升序）
+ *
+ * ===== 可迁移的解题模式 =====
+ *
+ * "下一个排列"是"组合生成"的基础：
+ *   - STL 中有 std::next_permutation
+ *   - 可用于穷举所有排列（从最小排列开始，不断调用下一个排列）
+ *   - 类似问题：下一个更大元素（单调栈）、下一个回文数
+ *
+ * 在游戏中：
+ *   - 技能/道具组合的最优排列搜索
+ *   - 关卡中敌人出现顺序的自动变体生成
+ *   - 队伍布阵的遍历（枚举所有站位排列）
  */
+
+#include <vector>
+#include <algorithm>
+using namespace std;
 
 // @lc code=start
 class Solution {
@@ -11,37 +82,35 @@ public:
         int n = nums.size();
         if (n <= 1) return;
 
-        // Step 1: Find the largest index k such that nums[k] < nums[k + 1]. 
-        // If no such index exists, the permutation is the last permutation.
+        // 第1步：从右向左找第一个下降位置 k
         int k = -1;
-        for (int i = n - 2; i >= 0; --i) {
+        for (int i = n - 2; i >= 0; i--) {
             if (nums[i] < nums[i + 1]) {
                 k = i;
                 break;
             }
         }
 
+        // 如果没找到下降位置，说明是最大排列，直接反转为最小
         if (k == -1) {
-            // This is the last permutation, reverse to get the first permutation
             reverse(nums.begin(), nums.end());
             return;
         }
 
-        // Step 2: Find the largest index l greater than k such that nums[k] < nums[l].
+        // 第2步：从右向左找第一个大于 nums[k] 的位置 l
         int l = -1;
-        for (int i = n - 1; i > k; --i) {
-            if (nums[k] < nums[i]) {
+        for (int i = n - 1; i > k; i--) {
+            if (nums[i] > nums[k]) {
                 l = i;
                 break;
             }
         }
 
-        // Step 3: Swap the value of nums[k] with that of nums[l].
+        // 第3步：交换 nums[k] 和 nums[l]
         swap(nums[k], nums[l]);
 
-        // Step 4: Reverse the sequence from nums[k + 1] up to and including the final element nums[n-1].
+        // 第4步：反转 k+1 到末尾（原本是降序，反转后变升序，最小化）
         reverse(nums.begin() + k + 1, nums.end());
     }
 };
 // @lc code=end
-

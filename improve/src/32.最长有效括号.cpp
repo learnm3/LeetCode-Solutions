@@ -2,32 +2,112 @@
  * @lc app=leetcode.cn id=32 lang=cpp
  *
  * [32] 最长有效括号
+ *
+ * ===== 游戏客户端开发面试情境题 =====
+ *
+ * 【情境】你在开发一个游戏内置的"脚本编辑器"（类似魔兽世界的宏编辑器）。
+ * 用户输入的脚本中包含嵌套的条件表达式，使用括号表示作用域：
+ *   (attack) 和 (defend) 是合法动作
+ *   ((buff) 则括号不匹配，是非法表达式
+ * 编辑器需要高亮显示"最长的合法括号片段"，提示用户哪部分是正确的。
+ * 这就是"最长有效括号"问题。
+ *
+ * 另一个情境：UI 布局的嵌套容器校验——每个 Panel/Begin 必须对应 End，
+ * 找出嵌套层级中连续合法的最大区域。
+ *
+ * 【题目】给定只包含 '(' 和 ')' 的字符串，找出最长有效括号子串的长度。
+ * 示例：
+ *   输入：s = "(()"
+ *   输出：2（"()"）
+ *   输入：s = ")()())"
+ *   输出：4（"()()"）
+ *   输入：s = ""
+ *   输出：0
+ *
+ * ===== 核心思维 =====
+ *
+ * 解法一：栈（推荐面试用）
+ *
+ *   栈中存储"索引"而不是字符本身。
+ *   技巧：栈底始终保持一个"当前有效串起点前一个位置"的索引。
+ *
+ *   初始化：栈中放入 -1（哨兵，表示"当前考察的片段从 0 开始"）
+ *
+ *   遍历字符串索引 i：
+ *     - 遇到 '('：将 i 压入栈（记录左括号位置，等待匹配）
+ *     - 遇到 ')'：
+ *       1. 弹出栈顶（匹配掉一个 '('）
+ *       2. 如果栈变空：说明这个 ')' 没有匹配的左括号（多余的右括号），
+ *          将当前索引 i 压栈作为新的"无效起点标记"
+ *       3. 如果栈不为空：用 i - 栈顶 更新最长长度
+ *
+ *   为什么存索引？
+ *     因为长度 = 当前索引 - 上一个"不合法"位置的索引
+ *
+ * 图解（s = ")()())"）：
+ *   初始：栈 = [-1]
+ *   i=0, ')': pop → 栈空 → push(0) → 栈 = [0]，已处理的不合法位置=0
+ *   i=1, '(': push(1) → 栈 = [0,1]
+ *   i=2, ')': pop → 栈 = [0]，maxLen = max(0, 2-0) = 2
+ *   i=3, '(': push(3) → 栈 = [0,3]
+ *   i=4, ')': pop → 栈 = [0]，maxLen = max(2, 4-0) = 4
+ *   i=5, ')': pop → 栈空 → push(5) → 栈 = [5]
+ *
+ *   结果：maxLen = 4（子串 "()()"）
+ *
+ * 解法二：双向扫描（O(1) 空间）
+ *   从左到右扫描：left 计数 '('，right 计数 ')'。相等时更新长度，right>left 时清零。
+ *   从右到左再扫一遍（处理 left 始终 > right 的情况，如 "(()"）。
+ *   游戏开发中这个更省内存，适合嵌入式场景。
+ *
+ * ===== 可迁移的解题模式 =====
+ *
+ * "括号匹配"问题的通用框架：
+ *   - 栈存索引 → 方便计算区间长度
+ *   - 栈底哨兵 → 统一处理边界
+ *   - 计数法 → 空间优化为 O(1)
+ *
+ * 同类问题：
+ *   - 有效的括号（20）：判断整个字符串是否有效
+ *   - 删除无效的括号（301）：回溯/BFS
+ *   - 游戏中宏解析器：嵌套 if/endif 匹配检测
+ *   - UI 容器的 Begin/End 配对校验
+ *   - 数据序列化时的括号/标签匹配（JSON, XML）
  */
+
+#include <string>
+#include <stack>
+#include <algorithm>
+using namespace std;
 
 // @lc code=start
 class Solution {
 public:
     int longestValidParentheses(string s) {
-        int maxLength = 0;
-        stack<int> indices;
-        indices.push(-1); // Base index for valid substring
+        int maxLen = 0;
+        stack<int> stk;
+        stk.push(-1);  // 哨兵：表示"当前有效子串可以从索引 0 开始"
 
-        for (int i = 0; i < s.length(); ++i) {
+        for (int i = 0; i < s.size(); i++) {
             if (s[i] == '(') {
-                indices.push(i); // Push the index of the '('
+                // 左括号：压入索引，等待匹配
+                stk.push(i);
             } else {
-                indices.pop(); // Pop the last index
+                // 右括号：尝试匹配
+                stk.pop();
 
-                if (indices.empty()) {
-                    indices.push(i); // Push the current index as a base for future valid substrings
+                if (stk.empty()) {
+                    // 栈空了，说明这个 ')' 没有匹配的左括号
+                    // 将它作为新的"无效起点"标记
+                    stk.push(i);
                 } else {
-                    maxLength = max(maxLength, i - indices.top()); // Update max length
+                    // 栈非空，计算当前有效长度
+                    maxLen = max(maxLen, i - stk.top());
                 }
             }
         }
 
-        return maxLength;
+        return maxLen;
     }
 };
 // @lc code=end
-

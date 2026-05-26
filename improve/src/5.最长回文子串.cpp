@@ -2,32 +2,124 @@
  * @lc app=leetcode.cn id=5 lang=cpp
  *
  * [5] 最长回文子串
+ *
+ * ===== 游戏客户端开发面试情境题 =====
+ *
+ * 【情境】对称关卡地图的自动检测
+ *
+ * 你正在为 Roguelike 游戏开发随机地图生成器。策划要求某些房间布局必须是
+ * "回文对称"的——即从左到右读和从右到左读的 Tile 序列完全一致，这样玩家
+ * 不管从哪个方向进入房间都有相同的视觉体验。
+ *
+ * 你拿到一个由 Tile 类型 ID 组成的数组（如 [WALL, FLOOR, DOOR, FLOOR, WALL]），
+ * 需要快速找出其中最长的回文对称子段，用来确认地图中最大的对称区域。
+ *
+ * 例如：序列 [1,2,3,2,1,4,5] 中最长回文子段是 [1,2,3,2,1]，长度 5。
+ *
+ * 游戏开发中的类比场景：
+ * - 镜像技能特效：检查技能动画的粒子序列是否回文对称
+ * - 用户名验证：检测玩家昵称中的回文子串（成就系统："回文爱好者"）
+ * - 关卡密码：生成回文密码用于隐藏关卡解锁（如 12321）
+ *
+ * 【题目】
+ * 给定一个字符串 s，找到 s 中最长的回文子串（正读反读相同的连续子串）。
+ *
+ * 示例：
+ *   输入: s = "babad"
+ *   输出: "bab"  （"aba" 也是有效答案）
+ *
+ *   输入: s = "cbbd"
+ *   输出: "bb"
+ *
+ * ===== 核心思维 =====
+ *
+ * 一、什么是回文串的"中心"？
+ *
+ * 回文串是关于某个中心对称的。中心有两种：
+ *   - 单字符中心（奇数长度回文）："racecar" 的中心是 'e'
+ *   - 双字符中心（偶数长度回文）："abba" 的中心在 'b' 和 'b' 之间
+ *
+ *    "b a b a d"
+ *     ↑          单字符中心 i=0, 向两侧扩展 "b" → 长度1
+ *       ↑        单字符中心 i=1, 向两侧扩展 "a" → "bab" → 长度3
+ *         ↑      单字符中心 i=2, ...
+ *      ↑↑        双字符中心 [0,1], "ba" 不回文 → 停
+ *        ↑↑      双字符中心 [1,2], "ab" 不回文 → 停
+ *          ↑↑    双字符中心 [2,3], "ba" 不回文 → 停
+ *
+ * 二、中心扩展法 (Expand Around Center)
+ *
+ * 枚举每个可能的中心（共 2n-1 个：n 个单字符中心 + n-1 个双字符中心），
+ * 从中心向两侧扩展，直到不再满足回文条件。记录扩展的最大长度和起始位置。
+ *
+ * 算法步骤：
+ *   1. 遍历 i = 0..n-1（每个字符位置）
+ *   2. 以 i 为中心（奇数长度回文）扩展
+ *   3. 以 [i, i+1] 为中心（偶数长度回文）扩展
+ *   4. 比较两种扩展的长度，更新最大值
+ *
+ * 三、为什么不用动态规划？
+ *
+ * DP 解法 O(n^2) 时间和 O(n^2) 空间。中心扩展法同样是 O(n^2) 时间，
+ * 但空间是 O(1)。在实际面试中，中心扩展法更简洁直观，且常数因子更小。
+ * Manacher 算法可达 O(n)，但实现复杂，面试极少要求。
+ *
+ * 四、复杂度分析
+ *
+ *   - 时间复杂度：O(n^2)。枚举 2n-1 个中心，每个中心最多扩展 O(n)。
+ *   - 空间复杂度：O(1)。只用了常数个变量。
+ *
+ * 五、可迁移模式 —— 中心扩展 / 双指针相向
+ *
+ * 任何涉及"对称性"、"对面扩展"的问题都可以考虑中心扩展或双指针：
+ *   - 判断一个字符串是否是回文（双指针从两端向中间）
+ *   - 回文子串计数（647. 回文子串）
+ *   - 最长的"镜像"子序列
+ *
+ * 相关题：
+ *   - 647. 回文子串（计数而非最长）
+ *   - 516. 最长回文子序列（DP，子序列而非子串）
+ *   - 131. 分割回文串（回溯）
  */
+
+#include <string>
+#include <utility>
+using namespace std;
 
 // @lc code=start
 class Solution {
 public:
+    // 从中心 (left, right) 向两侧扩展，返回回文子串的 [起, 止] 下标
+    // left==right 检测奇数长度回文；left+1==right 检测偶数长度回文
     pair<int, int> expandAroundCenter(const string& s, int left, int right) {
         while (left >= 0 && right < s.size() && s[left] == s[right]) {
-            left--;
-            right++;
+            --left;
+            ++right;
         }
+        // 循环结束时 s[left] != s[right]，回文区间是 (left, right)
         return {left + 1, right - 1};
     }
+
     string longestPalindrome(string s) {
-        int start = 0, maxLen = 1;
-        for (int i = 0; i < s.size(); i++) {
-            auto [left1, right1] = expandAroundCenter(s, i, i);
-            auto [left2, right2] = expandAroundCenter(s, i, i + 1);
-            int len1 = right1 - left1 + 1, len2 = right2 - left2 + 1;
+        int start = 0, maxLen = 1; // 至少单个字符
+
+        for (int i = 0; i < s.size(); ++i) {
+            // 情况1：奇数长度，中心为单个字符 s[i]
+            auto [l1, r1] = expandAroundCenter(s, i, i);
+            int len1 = r1 - l1 + 1;
+
+            // 情况2：偶数长度，中心为相邻两个字符 s[i] 和 s[i+1]
+            auto [l2, r2] = expandAroundCenter(s, i, i + 1);
+            int len2 = r2 - l2 + 1;
+
+            // 取较长者
             int len = max(len1, len2);
             if (len > maxLen) {
                 maxLen = len;
-                start = (len == len1) ? left1 : left2;
+                start = (len == len1) ? l1 : l2;
             }
         }
         return s.substr(start, maxLen);
     }
 };
 // @lc code=end
-

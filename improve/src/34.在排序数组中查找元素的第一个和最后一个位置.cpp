@@ -2,46 +2,137 @@
  * @lc app=leetcode.cn id=34 lang=cpp
  *
  * [34] 在排序数组中查找元素的第一个和最后一个位置
+ *
+ * ============================================================
+ * 游戏客户端开发面试情境题
+ * ============================================================
+ *
+ * 【情境】
+ * 你正在做 MMO 的"等级排行榜"系统。
+ * 排行榜是一个按战斗力升序排列的数组，同一个战斗力可能有
+ * 好几个玩家（并列名次）。策划要求：输入一个战斗力值，
+ * 返回这个战斗力在排行榜上的"排名区间"（第一个和最后
+ * 一个位置）。这决定了玩家的真实排名和并列人数。
+ *
+ * 游戏开发中同样的场景：
+ * - 排行榜：同一分数段的玩家区间
+ * - 背包排序：按品质排序后，找某个品质物品的起止 index
+ * - 伤害统计：DPS 排序后找某个 DPS 段的玩家范围
+ * - 怪物刷新表：按等级排序后找某等级怪物的 ID 范围
+ * - 拍卖行：按价格排序后找某个价格区间的物品
+ *
+ * ============================================================
+ * 题目
+ * ============================================================
+ *
+ * 给一个非递减数组 nums 和目标值 target，找 target 的
+ * 起始和结束位置。不存在返回 [-1, -1]。
+ *
+ * 示例：
+ *   输入: nums = [5,7,7,8,8,10], target = 8
+ *   输出: [3, 4]
+ *
+ * ============================================================
+ * 核心思维：两次二分，分别找左右边界
+ * ============================================================
+ *
+ * 要找"第一个"和"最后一个"，本质是对二分查找的变形：
+ *
+ *   普通二分: 找到 target 就停
+ *   找左边界: 找到 target 后继续往左找（收缩 right）
+ *   找右边界: 找到 target 后继续往右找（收缩 left）
+ *
+ * 左边界二分:
+ *   当 nums[mid] >= target 时，right = mid - 1
+ *   （等于 target 时也不停，继续往左挤）
+ *   循环结束后，left 就是第一个 >= target 的位置
+ *
+ * 右边界二分:
+ *   当 nums[mid] <= target 时，left = mid + 1
+ *   （等于 target 时也不停，继续往右挤）
+ *   循环结束后，right 就是最后一个 <= target 的位置
+ *
+ * 一句话：找左边界时"大于等于都往左"，找右边界时"小于等于
+ * 都往右"。
+ *
+ * ============================================================
+ * 图解：nums=[5,7,7,8,8,10], target=8
+ * ============================================================
+ *
+ * 找左边界（第一个 8）：
+ *
+ *   [5, 7, 7, 8, 8, 10]
+ *    L        M       R     mid=2, nums[2]=7 < 8 → left=3
+ *
+ *   [5, 7, 7, 8, 8, 10]
+ *             L  M    R     mid=4, nums[4]=8 >= 8 → right=3
+ *
+ *   [5, 7, 7, 8, 8, 10]
+ *             L,R           mid=3, nums[3]=8 >= 8 → right=2
+ *
+ *   循环结束，left=3 ← 这就是第一个 8 的位置 ✅
+ *
+ * 找右边界（最后一个 8）：
+ *
+ *   [5, 7, 7, 8, 8, 10]
+ *    L        M       R     mid=2, nums[2]=7 <= 8 → left=3
+ *
+ *   [5, 7, 7, 8, 8, 10]
+ *             L  M    R     mid=4, nums[4]=8 <= 8 → left=5
+ *
+ *   [5, 7, 7, 8, 8, 10]
+ *                   L,R     mid=5, nums[5]=10 > 8 → right=4
+ *
+ *   循环结束，right=4 ← 这就是最后一个 8 的位置 ✅
+ *
+ * 最终返回 [3, 4] ✅
+ *
+ * ============================================================
+ * 代码分步讲解
+ * ============================================================
  */
+
+#include <vector>
+using namespace std;
 
 // @lc code=start
 class Solution {
 public:
     vector<int> searchRange(vector<int>& nums, int target) {
-        vector<int> result(2, -1); // Initialize result with -1
-        int left = 0, right = nums.size() - 1;
+        if (nums.empty()) return {-1, -1};
 
-        // Find the first occurrence of target
+        // ---- ① 找左边界（第一个 >= target 的位置） ----
+        int left = 0, right = nums.size() - 1;
         while (left <= right) {
             int mid = left + (right - left) / 2;
             if (nums[mid] < target) {
-                left = mid + 1;
+                left = mid + 1;       // mid 太小，往右
             } else {
-                right = mid - 1;
+                right = mid - 1;      // 大于等于 target 都往左挤
             }
         }
+        // 循环结束，left = 第一个 >= target 的索引
 
-        // Check if the target is found
-        if (left < nums.size() && nums[left] == target) {
-            result[0] = left; // First occurrence index
-        } else {
-            return result; // Target not found, return [-1, -1]
+        // 检查是否真的找到了 target
+        if (left >= nums.size() || nums[left] != target) {
+            return {-1, -1};
         }
+        int first = left;
 
-        // Find the last occurrence of target
-        right = nums.size() - 1; // Reset right pointer
+        // ---- ② 找右边界（最后一个 <= target 的位置） ----
+        right = nums.size() - 1;       // 重置 right，left 保持不动也行
         while (left <= right) {
             int mid = left + (right - left) / 2;
             if (nums[mid] > target) {
-                right = mid - 1;
+                right = mid - 1;       // mid 太大，往左
             } else {
-                left = mid + 1;
+                left = mid + 1;        // 小于等于 target 都往右挤
             }
         }
+        // 循环结束，right = 最后一个 <= target 的索引
+        int last = right;
 
-        result[1] = right; // Last occurrence index
-        return result;
+        return {first, last};
     }
 };
 // @lc code=end
-

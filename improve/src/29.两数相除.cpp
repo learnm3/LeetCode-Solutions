@@ -2,33 +2,107 @@
  * @lc app=leetcode.cn id=29 lang=cpp
  *
  * [29] 两数相除
+ *
+ * ===== 游戏客户端开发面试情境题 =====
+ *
+ * 【情境】你在开发一个手游的战斗数值系统，需要在不使用除法的嵌入式环境中
+ * 计算伤害公式（例如：实际伤害 = 攻击力 / 防御系数）。
+ * 由于目标平台（如部分嵌入式/主机环境）的除法指令开销极大，
+ * 或者你正在编写定点数运算库，需要自己实现整数除法。
+ * 这就是"两数相除"问题。
+ *
+ * 另一个情境：UI 布局引擎中，需要在不使用浮点除法的情况下，
+ * 计算控件宽度的等比例缩放（总宽 / 列数），保证像素精确。
+ *
+ * 【题目】给定两个整数 dividend（被除数）和 divisor（除数），
+ * 返回它们相除的商，要求：
+ *   - 不能使用乘法 *、除法 /、取模 % 运算符
+ *   - 结果截断小数部分（向零取整）
+ *   - 如果结果溢出 32 位有符号整数范围 [-2^31, 2^31-1]，返回 2^31-1
+ * 示例：
+ *   输入：dividend = 10, divisor = 3
+ *   输出：3
+ *   输入：dividend = 7, divisor = -3
+ *   输出：-2
+ *
+ * ===== 核心思维 =====
+ *
+ * 核心思想："不断减去除数的倍数"，用位运算加速。
+ *
+ * 朴素做法（太慢）：
+ *   每次减去除数，计数加 1。直到被除数不够减为止。
+ *   例如 100 / 3：减 33 次 3。如果被除数是 2^31，那要减上亿次。
+ *
+ * 优化做法："每次减去最大的 2 的幂次倍"（倍增法 / 快速除）：
+ *   例如 100 / 3：
+ *   先找 3 的最大 2^k 倍，使得 3 * 2^k <= 100
+ *     k=5: 3<<5 = 96 <= 100，减去 96，结果 += 2^5 = 32
+ *     k=0: 3<<0 = 3  <= 4，   减去 3， 结果 += 2^0 = 1
+ *     k=?: 1 < 3，停止
+ *   结果 = 32 + 1 = 33
+ *
+ * 形象理解：
+ *   想象你要把一堆硬币按每组 b 个分堆。
+ *   朴素方法：每次数 b 个，分出一堆。慢。
+ *   聪明方法：先试试最大的 2^k 堆（每堆 b 个），
+ *   如果总数够，就一次分出 2^k 堆，然后处理剩下的。
+ *
+ * 步骤详解：
+ *   1. 处理符号（用异或判断结果正负）
+ *   2. 处理溢出（INT_MIN / -1 会溢出）
+ *   3. 转换为正数（用 long long 防止取绝对值溢出）
+ *   4. 倍增减法循环
+ *   5. 恢复符号返回
+ *
+ * ===== 可迁移的解题模式 =====
+ *
+ * "倍增 / 快速幂倒数"模式：
+ *   不是每次减一步，而是每次减尽可能大的步长（2 的幂次倍）
+ *   这个思想出现在：快速幂、快速乘法、二分搜索、指数退避重试
+ *
+ * 同类问题：
+ *   - Pow(x, n)：快速幂（同样使用倍增思想）
+ *   - 两数相除的变体：带小数的定点除法
+ *   - 游戏中伤害公式的分段减免计算
+ *   - 网络协议的拥塞控制（指数退避）
  */
+
+#include <climits>
+#include <cstdlib>
+using namespace std;
 
 // @lc code=start
 class Solution {
 public:
     int divide(int dividend, int divisor) {
-        if (divisor == 0) return INT_MAX; // 处理除数为0的情况
-        if (dividend == INT_MIN && divisor == -1) return INT_MAX; // 处理溢出情况
+        // 处理溢出：INT_MIN / -1 会超出 INT_MAX
+        if (dividend == INT_MIN && divisor == -1) return INT_MAX;
+        if (divisor == 1) return dividend;
 
-        // 使用 long long 来避免溢出
+        // 确定结果的符号（异或：同号为正，异号为负）
+        bool negative = (dividend > 0) ^ (divisor > 0);
+
+        // 转为正数处理，用 long long 防止 INT_MIN 取绝对值溢出
         long long a = abs((long long)dividend);
         long long b = abs((long long)divisor);
         long long result = 0;
 
+        // 倍增减法：每次尝试减去 divisor 的最大 2^k 倍
         while (a >= b) {
-            long long temp = b, multiple = 1;
+            long long temp = b;      // 当前尝试的除数倍数
+            long long multiple = 1;  // 当前倍数（2^k）
+
+            // 不断翻倍，直到 2*temp 超过 a
             while (a >= (temp << 1)) {
-                temp <<= 1;
-                multiple <<= 1;
+                temp <<= 1;       // temp *= 2
+                multiple <<= 1;   // multiple *= 2
             }
-            a -= temp;
-            result += multiple;
+
+            a -= temp;               // 减去找到的最大倍数
+            result += multiple;      // 累加倍数到结果
         }
 
-        // 根据符号调整结果
-        return ((dividend > 0) ^ (divisor > 0)) ? -result : result;
+        return negative ? -result : result;
     }
 };
 // @lc code=end
-

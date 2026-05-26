@@ -2,50 +2,110 @@
  * @lc app=leetcode.cn id=22 lang=cpp
  *
  * [22] 括号生成
+ *
+ * ===== 游戏客户端开发面试情境题 =====
+ *
+ * 【情境】你是游戏客户端程序员，负责开发"对话剧情编辑器"。编剧需要在
+ * 对话树中嵌套分支选项，例如：
+ *   (选择A (分支A1) (分支A2)) 或 (选择B (分支B1) (分支B2))
+ * 合法的嵌套结构要求括号必须正确配对。编辑器需要预览功能：给定 N 层嵌套，
+ * 有多少种合法的对话树结构？请生成所有合法结构。
+ *
+ * 这个问题抽象出来就是：生成 n 对括号的所有合法组合。
+ *
+ * 【题目】数字 n 代表生成括号的对数，请你设计一个函数，用于能够生成所有
+ * 可能的并且有效的括号组合。
+ * 示例:
+ *   输入: n = 1  输出: ["()"]
+ *   输入: n = 3  输出: ["((()))","(()())","(())()","()(())","()()()"]
+ *
+ * ===== 核心思维 =====
+ *
+ * 这道题的关键在于"剪枝"——不是先生成所有组合再验证（那样会生成大量
+ * 无效组合），而是在生成过程中就保证合法性。
+ *
+ * 合法括号序列必须满足两个约束：
+ *   1. 左括号数量 ≤ n（不能超过总数）
+ *   2. 右括号数量 ≤ 左括号数量（任何时候右括号不能比左括号多，
+ *      否则会出现 ")(" 这种无法闭合的情况）
+ *
+ * 这就像建房子：你不能在还没打地基的时候就盖屋顶（右括号不能先于左括号），
+ * 也不能打超过 n 层地基（左括号不能超过 n 个）。
+ *
+ * 回溯过程像一棵二叉树：
+ *
+ *                    ""
+ *                   /
+ *                 "("            ← 只能加左括号（右括号=0>左括号=0不行）
+ *               /     \
+ *           "(("       "()"      ← 左括号<2可加，右括号<左括号可加
+ *           /  \         \
+ *      "((("  "(()"     "()("
+ *       /       /  \       \
+ *   "((()"  "(()(" "(()"  "()(("  ...（继续直到凑满2n个字符）
+ *
+ * 【剪枝条件】
+ *   if (open < n)  → 可以加左括号
+ *   if (close < open) → 可以加右括号
+ *
+ * 【不需要 isValid 验证！】
+ * 旧方案可能生成全部 2^(2n) 种组合再用栈验证，太慢了。
+ * 用剪枝直接保证每一步都合法，生成的每一个结果都是有效的。
+ *
+ * ===== 代码分步讲解 =====
+ *
+ * 第1步: 特判 n=0（LeetCode 不需要但防御性编程）
+ * 第2步: 回溯函数，参数为 (当前字符串, 已用左括号数, 已用右括号数, n, 结果集)
+ * 第3步: 终止条件：长度达到 2n，收集结果
+ * 第4步: 剪枝分支1：如果 open < n，可以加 '('
+ * 第5步: 剪枝分支2：如果 close < open，可以加 ')'
+ *
+ * ===== 可迁移模式 =====
+ * 【回溯 + 剪枝】是生成类问题的核心：
+ *   - 合法排列生成（约束条件在生成过程中检查）
+ *   - 迷宫寻路（剪掉碰壁的路径）
+ *   - N 皇后问题（剪掉行列冲突的放置）
+ *   - 数独求解（剪掉违反规则的填数）
+ *   - 游戏应用：合法技能序列生成、装备搭配枚举、天赋树路径
+ *   核心：在递归的每一步检查约束，不合法就不继续，大幅减少搜索空间。
  */
+
+#include <vector>
+#include <string>
+using namespace std;
 
 // @lc code=start
 class Solution {
 public:
-    bool isValid(const string& s) {
-        stack<char> stk;
-        for (char ch : s) {
-            if (ch == '(') {
-                stk.push(ch);
-            } else if (ch == ')') {
-                if (stk.empty() || stk.top() != '(') {
-                    return false;
-                }
-                stk.pop();
-            }
-        }
-        return stk.empty();
-    }
-
-    void backtrack(string& current, int openCount, int closeCount, int n, vector<string>& result) {
-        if (current.size() == 2 * n) {
-            if (isValid(current)) {
-                result.push_back(current);
-            }
-            return;
-        }
-        if (openCount < n) {
-            current.push_back('(');
-            backtrack(current, openCount + 1, closeCount, n, result);
-            current.pop_back();
-        }
-        if (closeCount < n) {
-            current.push_back(')');
-            backtrack(current, openCount, closeCount + 1, n, result);
-            current.pop_back();
-        }
-    }
     vector<string> generateParenthesis(int n) {
         vector<string> result;
-        string current;
-        backtrack(current, 0, 0, n, result);
+        string path;
+        backtrack(path, 0, 0, n, result);
         return result;
+    }
+
+private:
+    void backtrack(string& path, int open, int close, int n,
+                   vector<string>& result) {
+        // 终止条件：凑满 2n 个字符，一定合法（因为每一步都剪枝了）
+        if ((int)path.size() == 2 * n) {
+            result.push_back(path);
+            return;
+        }
+
+        // 分支1：还能加左括号吗？
+        if (open < n) {
+            path.push_back('(');
+            backtrack(path, open + 1, close, n, result);
+            path.pop_back();                           // 回溯
+        }
+
+        // 分支2：能加右括号吗？（必须右括号数 < 左括号数才合法）
+        if (close < open) {
+            path.push_back(')');
+            backtrack(path, open, close + 1, n, result);
+            path.pop_back();                           // 回溯
+        }
     }
 };
 // @lc code=end
-
