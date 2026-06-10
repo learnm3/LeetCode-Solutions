@@ -1,7 +1,0 @@
-{
-  "题目描述": "你是MMO全球排行榜系统的开发者。K个服务器各自维护了已排序的玩家排名链表。\n需要将它们合并成一个全局排行榜。直接两两归并(#21)的效率是O(KN)，可以用最小堆优化到O(N log K)。",
-  "解题思路": "1. 两两合并O(KN)：for(auto& list : lists) ans = mergeTwo(ans, list) ❌ 可行但非最优\n2. 最小堆O(N log K)：\n   - 将K个链表的头节点放入最小堆\n   - 每次弹出堆顶最小节点，接入结果链表中\n   - 将该节点的next推入堆\n   - 重复直到堆空\n3. C++中priority_queue默认最大堆，需自定义比较（或用pair的负数技巧）\n4. 关键：堆中存节点指针 + 自定义比较函数",
-  "代码模板": "ListNode* mergeKLists(vector<ListNode*>& lists) {\n    auto cmp = [](ListNode* a, ListNode* b) { return a->val > b->val; };\n    priority_queue<ListNode*, vector<ListNode*>, decltype(cmp)> pq(cmp);\n    for (auto& h : lists) if (h) pq.push(h);\n    ListNode dummy(0);\n    ListNode* cur = &dummy;\n    while (!pq.empty()) {\n        auto node = pq.top(); pq.pop();\n        cur->next = node;\n        cur = cur->next;\n        if (node->next) pq.push(node->next);\n    }\n    return dummy.next;\n}\n// 最小堆K路归并 | priority_queue自定义比较 | 每次pop后push next",
-  "算法思维框架": "触发条件：K个有序序列合并 → 最小堆K路归并\n复杂度：O(N log K) 时间，O(K) 空间（堆大小）\n与#21的区别：K=2时两两足够，K>2用堆更优\nC++技巧：priority_queue需自定义比较 lambda + decltype",
-  "相似题目": "#21 合并两个有序链表 | #215 数组中的第K个最大元素(同样用堆)"
-}

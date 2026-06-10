@@ -1,7 +1,0 @@
-{
-  "题目描述": "你是RPG背包配装生成器的开发者。玩家有一个容量为target的背包，仓库中有若干种物品，每种物品有特定的重量值。\n玩家希望找到所有恰好填满背包容量的物品组合方案——每种物品可以使用任意多次（无限供应）。\n给定无重复的物品重量数组candidates和背包容量target，返回所有不重复的组合方案。",
-  "解题思路": "1. 回溯+可以重复选择：\n   - 递归参数：idx(当前考虑的物品下标), remain(剩余容量), path\n   - 终止：remain==0 → 收集结果；remain<0 → 回溯\n   - 每层从idx开始（不是0，保证不重复组合），因为可无限选但不想重复排列\n2. 关键：start参数保证组合有序（避免[2,3]和[3,2]重复）\n3. 剪枝：排序candidates后，若candidates[i] > remain，break（后面更大）\n4. 时间复杂度：O(N^(T/M))——最坏情况",
-  "代码模板": "vector<vector<int>> combinationSum(vector<int>& cand, int target) {\n    sort(cand.begin(), cand.end());\n    vector<vector<int>> ans;\n    vector<int> path;\n    function<void(int,int)> dfs = [&](int idx, int remain) {\n        if (remain == 0) { ans.push_back(path); return; }\n        for (int i = idx; i < cand.size(); i++) {\n            if (cand[i] > remain) break; // 剪枝\n            path.push_back(cand[i]);\n            dfs(i, remain - cand[i]); // 可重复：下次从i开始\n            path.pop_back();\n        }\n    };\n    dfs(0, target);\n    return ans;\n}\n// 可重复→递归传i而非i+1 | 排序+剪枝 | start参数防重复组合",
-  "算法思维框架": "触发条件：组合/子集 + 可重复 + 求和=target → 回溯（传idx控制不重复）\n与#40的区别：\n- #39每种无限用 → dfs(i, remain-cand[i])（下一个还从i开始）\n- #40每种只能用一次 → dfs(i+1, remain-cand[i])（下一个从i+1开始）\n排序+break剪枝是通用优化",
-  "相似题目": "#40 组合总和II(不可重复) | #216 组合总和III(限制k个数) | #77 组合(无重复)"
-}

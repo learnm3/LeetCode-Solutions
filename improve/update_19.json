@@ -1,7 +1,0 @@
-{
-  "题目描述": "你是RPG游戏Buff管理系统的开发者。角色身上的Buff/Debuff按剩余持续时间升序排列成链表。\n当玩家使用\"驱散\"技能时，需要移除倒数第N个Buff（即剩余时间第N短的Buff，也即离过期第N近的Buff）。\n给定链表头节点和N，返回删除节点后的链表头。要求一次遍历。",
-  "解题思路": "1. 暴力O(2n)：先遍历得到长度L，再遍历到L-N处删除 ❌ 两次遍历\n2. 快慢指针O(n)一次遍历：\n   - 快指针先走N步\n   - 然后快慢指针同步走，快指针到末尾时慢指针刚好在倒数第N个的前驱\n   - 删除 slow->next\n3. dummy节点：统一处理删除头节点的情况\n4. 易错：N可能等于链表长度（删除头节点）——dummy救场",
-  "代码模板": "ListNode* removeNthFromEnd(ListNode* head, int n) {\n    ListNode dummy(0);\n    dummy.next = head;\n    ListNode *fast = &dummy, *slow = &dummy;\n    for (int i = 0; i <= n; i++) fast = fast->next; // 快指针先走N+1步\n    while (fast) {\n        fast = fast->next;\n        slow = slow->next;\n    }\n    ListNode* del = slow->next;\n    slow->next = slow->next->next;\n    delete del;  // C++手动释放\n    return dummy.next;\n}\n// 快指针先走N+1步(因为要定位到待删节点的前驱) | dummy不可或缺",
-  "算法思维框架": "触发条件：链表 + 倒数第N个 + 一次遍历 → 快慢指针\ndummy节点是链表题的万能保险——统一处理头节点相关操作\n快慢指针模板：\n1. fast先走k步\n2. fast和slow同步走直到fast走到末尾\n3. slow停在目标位置的前驱\n易错：\n- ❌ 快指针先走N步还是N+1步（走N+1保证slow在待删节点的前驱）\n- ❌ 忘记dummy，删除头节点时报错",
-  "相似题目": "#876 链表的中间节点 | #141 环形链表(快慢指针) | #21 合并有序链表"
-}

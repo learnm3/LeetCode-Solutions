@@ -1,7 +1,0 @@
-{
-  "题目描述": "你是技能树构建器的UI工具开发者。在RPG游戏中，数字2-9分别映射到若干种技能符文（类似老式手机键盘）。\n玩家选择一个数字序列（如\"23\"），你的工具需要生成所有可能的技能符文组合方案，供玩家预览并拖入快捷栏。\n数字到符文的映射：2→[a,b,c] 3→[d,e,f] 4→[g,h,i] 5→[j,k,l] 6→[m,n,o] 7→[p,q,r,s] 8→[t,u,v] 9→[w,x,y,z]",
-  "解题思路": "1. 标准回溯模板：\n   - 递归函数backtrack(index, path)\n   - index：当前处理到digits的第几个位置\n   - path：当前已构造的字符串\n   - 终止条件：index==digits.size() → 记录path\n   - 搜索：遍历digits[index]对应的所有字符，递归调用\n2. 本质：组合的笛卡尔积——每层的选择空间是独立的\n3. 用数组map[10]存储数字到字符的映射\n4. 复杂度O(4ⁿ)——每个数字最多对应4个字母",
-  "代码模板": "vector<string> letterCombinations(string digits) {\n    if (digits.empty()) return {};\n    vector<string> map = {\"\",\"\",\"abc\",\"def\",\"ghi\",\"jkl\",\"mno\",\"pqrs\",\"tuv\",\"wxyz\"};\n    vector<string> ans;\n    function<void(int,string)> dfs = [&](int idx, string path) {\n        if (idx == digits.size()) {\n            ans.push_back(path);\n            return;\n        }\n        for (char c : map[digits[idx] - '0']) {\n            dfs(idx + 1, path + c);\n        }\n    };\n    dfs(0, \"\");\n    return ans;\n}\n// 回溯模板：idx索引+path路径 | 每层循环选择 | 终止条件收集结果",
-  "算法思维框架": "标准回溯模板：\nvoid backtrack(状态参数) {\n    if (满足终止条件) { 收集结果; return; }\n    for (选择 : 当前层的选项) {\n        做选择;\n        backtrack(下一层状态);\n        撤销选择; // 本题path+c不修改原path，省略撤销\n    }\n}\n回溯 = DFS + 剪枝，核心是\"选择-递归-撤销\"循环",
-  "相似题目": "#22 括号生成 | #39 组合总和 | #78 子集"
-}

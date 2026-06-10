@@ -1,7 +1,0 @@
-{
-  "题目描述": "你是物理引擎中定点数计算模块的开发者。为了保证跨平台确定性（禁止使用浮点数），物理计算全部使用定点数。\n实现定点数的除法运算——给定被除数dividend和除数divisor，不使用乘法/除法/mod运算符，计算除法结果并截断小数部分。\n注意边界：-2³¹到2³¹-1，溢出返回INT_MAX（2³¹-1）",
-  "解题思路": "1. 暴力O(dividend)：不断减去除数直到被除数<除数 ❌ 太慢\n2. 位移加速O(log n)：左移除数直到刚好小于被除数，然后逐级右移\n3. 核心技巧：\n   - 全部转成正数处理（用long防溢出）\n   - 外层while(dividend>=divisor)：内层找最大shift使 divisor<<shift <= dividend\n   - ans += (1<<shift); dividend -= (divisor<<shift)\n4. 符号处理：异或判断结果符号\n5. 边界：dividend=INT_MIN divisor=-1时结果溢出→返回INT_MAX",
-  "代码模板": "int divide(int dividend, int divisor) {\n    if (dividend == INT_MIN && divisor == -1) return INT_MAX;\n    long a = labs(dividend), b = labs(divisor);\n    long ans = 0;\n    int sign = (dividend > 0) ^ (divisor > 0) ? -1 : 1;\n    while (a >= b) {\n        long temp = b, shift = 1;\n        while (a >= (temp << 1)) {\n            temp <<= 1; shift <<= 1;\n        }\n        a -= temp;\n        ans += shift;\n    }\n    return ans * sign;\n}\n// 位移除法：每次找最大的2^k*divisor ≤ dividend | 用long防溢出",
-  "算法思维框架": "触发条件：不允许乘/除/模 + 需要高效除法 → 位移模拟除法\n核心思想：每次减掉最大的2^k倍除数（相当于二进制的除法竖式）\n游戏应用：定点数物理引擎（保证跨平台确定性，浮点数结果不可重现）\n复杂度：O(log²n)\n易错：INT_MIN/-1溢出是经典边缘条件",
-  "相似题目": "#50 Pow(x,n)(快速幂同位移思想) | #7 整数反转"
-}

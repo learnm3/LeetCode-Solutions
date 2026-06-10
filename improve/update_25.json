@@ -1,7 +1,0 @@
-{
-  "题目描述": "你是操作历史系统的开发者。玩家的操作历史记录以链表存储，支持\"批量撤销\"功能——一次性回退最近K个操作。\n实现分组翻转：每K个节点一组进行翻转，不足K个则保持原序。\n要求空间O(1)（不能把节点值拷出来重组）。",
-  "解题思路": "1. 迭代遍历，每K个一组处理：\n   Step 1：找当前组的尾节点（走K步，不足K则返回）\n   Step 2：翻转该组 [head, tail]\n   Step 3：prev接上翻转后的组头，组尾接下一段的头\n   Step 4：prev跳到当前组尾，继续下一组\n2. 翻转链表用标准的三指针法（prev, curr, next）\n3. dummy节点统一处理头节点变化\n4. 复杂度O(n)时间O(1)空间",
-  "代码模板": "ListNode* reverseKGroup(ListNode* head, int k) {\n    ListNode dummy(0); dummy.next = head;\n    ListNode* prev = &dummy;\n    while (true) {\n        // 检查是否有K个节点\n        ListNode* tail = prev;\n        for (int i = 0; i < k; i++) {\n            tail = tail->next;\n            if (!tail) return dummy.next;\n        }\n        ListNode* nextGroup = tail->next;\n        // 翻转[head, tail]\n        auto [newHead, newTail] = reverse(head, tail);\n        prev->next = newHead;\n        newTail->next = nextGroup;\n        prev = newTail;\n        head = nextGroup;\n    }\n    return dummy.next;\n}\n// 翻转函数\npair<ListNode*,ListNode*> reverse(ListNode* head, ListNode* tail) {\n    ListNode* prev = tail->next, *curr = head;\n    while (prev != tail) {\n        ListNode* nxt = curr->next;\n        curr->next = prev;\n        prev = curr; curr = nxt;\n    }\n    return {tail, head};\n}\n// 核心：先找到每组的tail | 翻转后重新连接 | prev记录上一组尾",
-  "算法思维框架": "K个一组翻转 = 分组 + 每组内反转 + 组间连接\n是链表题的集大成者：同时考察 遍历/分组/翻转/连接\n易错：\n- ❌ 翻转时忘记保留next指针 → 链表断裂\n- ❌ 组间连接错误 → 翻转后的头尾接反\n- ❌ 不足K个时忘记提前返回",
-  "相似题目": "#24 两两交换(本题K=2特例) | #206 反转链表 | #92 反转链表II(指定区间翻转)"
-}

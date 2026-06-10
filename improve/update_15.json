@@ -1,7 +1,0 @@
-{
-  "题目描述": "你是RPG合成系统的开发者。玩家可以从材料库中选取三份材料进行合成。每份材料有一个魔法属性值(可正可负)，合成稳定配方的条件是——三份材料的属性值之和恰好为零。\n给定材料库的属性值数组 nums[n]，找出所有满足条件的三元组 [nums[i], nums[j], nums[k]]（i≠j≠k），且答案中不能包含重复的三元组。",
-  "解题思路": "1. 暴力O(n³)：三重循环枚举所有三元组，用set去重 ❌ 超时\n2. 排序+双指针O(n²)：\n   - 排序 O(n log n)\n   - 固定 nums[i]，在[i+1, n-1]上用双指针找两数之和 = -nums[i]\n   - 关键去重：固定i时跳过相同nums[i]；找到一组解后左右指针各跳过相同值\n3. 剪枝：排序后若nums[i] > 0 可直接break（后面都>0不可能和为0）\n4. 易错：\n   - 去重逻辑必须放在找到解之后——不能提前跳过导致漏解\n   - 指针移动：sum<0移左指针，sum>0移右指针",
-  "代码模板": "vector<vector<int>> threeSum(vector<int>& nums) {\n    sort(nums.begin(), nums.end());\n    vector<vector<int>> ans;\n    int n = nums.size();\n    for (int i = 0; i < n - 2; i++) {\n        if (nums[i] > 0) break;  // 剪枝\n        if (i > 0 && nums[i] == nums[i-1]) continue; // 去重i\n        int l = i + 1, r = n - 1;\n        while (l < r) {\n            int sum = nums[i] + nums[l] + nums[r];\n            if (sum < 0) l++;\n            else if (sum > 0) r--;\n            else {\n                ans.push_back({nums[i], nums[l], nums[r]});\n                while (l < r && nums[l] == nums[l+1]) l++; // 去重l\n                while (l < r && nums[r] == nums[r-1]) r--; // 去重r\n                l++; r--;\n            }\n        }\n    }\n    return ans;\n}\n// 核心：排序+固定一个+双指针 | 三层去重(i/l/r)",
-  "算法思维框架": "触发条件：找n个元素使和等于/接近target + 需要去重 → 排序+双指针\n核心转换：N数之和降维 → 固定1个 + (N-1)数之和子问题\n去重策略：排序后，固定位和前一位相同则跳过\n复杂度：三数之和O(n²)，四数之和O(n³)\n易错：\n- ❌ 去重过早导致漏解\n- ❌ 双指针移动方向写反\n- ❌ 答案是二维数组却忘记push_back",
-  "相似题目": "#16 最接近的三数之和 | #18 四数之和 | #1 两数之和(哈希表版本)"
-}

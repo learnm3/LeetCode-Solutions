@@ -1,7 +1,0 @@
-{
-  "题目描述": "你是战斗数值策划工具的程序开发者。给定N个技能修正器，每个修正器有一个数值。你需要从中选择三个修正器，使它们的总加成最接近（但不超过）平衡上限值 target。返回这个最接近的三数之和。\n例如：[修正器值]=[-1,2,1,-4], target=1 → 最接近和=2（-1+2+1=2距离1最近）",
-  "解题思路": "1. 与#15三数之和几乎相同的框架，差异是目标从=0变为≈target\n2. 排序+固定一个+双指针：\n   - 维护 closest 变量记录最接近的和\n   - 比较 abs(sum-target) 和 abs(closest-target)\n   - sum < target 移左指针增加sum；sum > target 移右指针减少sum\n   - sum == target 直接返回（最优解）\n3. 本质：将三数之和的判等问题改成距离最近问题\n4. 易错：closest初始值可能溢出 → 用INT_MAX/2",
-  "代码模板": "int threeSumClosest(vector<int>& nums, int target) {\n    sort(nums.begin(), nums.end());\n    int n = nums.size();\n    int closest = nums[0] + nums[1] + nums[2]; // 初始值\n    for (int i = 0; i < n - 2; i++) {\n        if (i > 0 && nums[i] == nums[i-1]) continue;\n        int l = i + 1, r = n - 1;\n        while (l < r) {\n            int sum = nums[i] + nums[l] + nums[r];\n            if (abs(sum - target) < abs(closest - target))\n                closest = sum;\n            if (sum < target) l++;\n            else if (sum > target) r--;\n            else return target;  // 精确匹配\n        }\n    }\n    return closest;\n}\n// 与#15的区别：不需要去重 | 维护最接近和 | sum==target时直接返回",
-  "算法思维框架": "与#15三数之和同族，核心差异在\"等于\"→\"最接近\"\n复杂度同O(n²)，但不需要去重逻辑（因为问题本身不要求唯一性）\n注意：closest初始值不能乱选（用前三个元素而非INT_MAX）",
-  "相似题目": "#15 三数之和(改条件) | #18 四数之和 | #259 较小的三数之和(计数)"
-}
